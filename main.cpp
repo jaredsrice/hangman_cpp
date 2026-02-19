@@ -2,16 +2,20 @@
 #include <string>
 #include <set>
 #include <cctype>
+#include <vector>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
-// Pass strings by const reference to avoid copying and to prevent accidental changes. 
+// Pass strings by const reference to avoid copying and to prevent accidental changes.
 string MakeHidden(const string& word)
 {
     return string(word.size(), '_');
 }
 
-// Isolated the display logic for the hangman art into its own function to keep the game loop clean. 
+// Isolated the display logic for the hangman art into its own function to keep the game loop clean.
 string GetHangmanArt(int wrongGuesses)
 {
     switch (wrongGuesses)
@@ -120,8 +124,8 @@ char GetGuess(const set<char>& guessed)
 
         char g = tolower(input[0]);
 
-        // Using isalpha(g) directly for simplicity instead of the more technical unsigned char cast. Only expect
-        // standard characters, so this is fine.s
+        // Using isalpha(g) directly for simplicity instead of the more technical unsigned char cast.
+        // Only expect standard characters, so this is fine.
         if (!isalpha(g))
         {
             cout << "Type a letter a-z.\n";
@@ -154,47 +158,216 @@ bool ApplyGuess(const string& word, string& hidden, char guess)
     return found;
 }
 
+bool IsValidWord(const string& w)
+{
+    if (w.empty()) return false;
+
+    for (char c : w)
+    {
+        if (!isalpha(c)) return false;
+    }
+
+    return true;
+}
+
+// Loads all words into memort at once during startup. Simpler and fast than dealing with it every round. 
+vector<string> LoadWords(const string& filename)
+{
+    vector<string> words;
+
+    ifstream in(filename);
+    if (!in.is_open())
+    {
+        cout << "Could not open " << filename << ". Make sure it is in the same folder as your program.\n";
+        return words;
+    }
+
+    string line;
+    while (getline(in, line))
+    {
+        string cleaned = "";
+
+        // Normalize input to keep game logic consistent. 
+        for (char c : line)
+        {
+            char lc = tolower(c);
+            if (isalpha(lc)) cleaned += lc;
+        }
+
+        if (!cleaned.empty())
+        {
+            words.push_back(cleaned);
+        }
+    }
+
+    return words;
+}
+
+string PickRandomWord(const vector<string>& words)
+{
+    int index = rand() % (int)words.size();
+    return words[index];
+}
+
+bool AskYesNo(const string& prompt)
+{
+    while (true)
+    {
+        cout << prompt;
+        string input;
+        getline(cin, input);
+
+        if (input.size() == 0) continue;
+
+        char c = tolower(input[0]);
+        if (c == 'y') return true;
+        if (c == 'n') return false;
+
+        cout << "Type y or n.\n";
+    }
+}
+
+void AppendWordToFile(const string& filename, const string& word)
+{
+    ofstream out(filename, ios::app);
+    if (!out.is_open())
+    {
+        cout << "Could not write to " << filename << ".\n";
+        return;
+    }
+
+    out << word << "\n";
+}
+
+int LoadBestStreak(const string& filename)
+{
+    ifstream in(filename);
+    if (!in.is_open())
+    {
+        return 0; 
+    }
+
+    int best = 0;
+    in >> best;
+    if (best < 0) best = 0;
+    return best;
+}
+
+void SaveBestStreak(const string& filename, int best)
+{
+    ofstream out(filename);
+    if (!out.is_open())
+    {
+        cout << "Could not write to " << filename << ".\n";
+        return;
+    }
+
+    out << best;
+}
+
 int main()
 {
-    const string word = "apple";   // Day 1: hardcoded
-    string hidden = MakeHidden(word);
+    srand((unsigned)time(nullptr));
 
-    int guessesLeft = 6;
+    const string WORDS_FILE = "words.txt";
+    const string STATS_FILE = "stats.txt";
 
-    // Use a set here to store guessed letters so duplicates are automatically prevented, and checking for existing guesses is simple.
-    set<char> guessed;
-
-    while (guessesLeft > 0 && hidden != word)
+    vector<string> words = LoadWords(WORDS_FILE);
+    if (words.empty())
     {
+        cout << "No usable words found in " << WORDS_FILE << ". Add words (one per line) and try again.\n";
+        return 0;
+    }
+
+    // Store best streak seperately to maintain file independence and integrity. 
+    int bestStreak = LoadBestStreak(STATS_FILE);
+    int currentStreak = 0;
+
+    cout << "Best win streak: " << bestStreak << "\n";
+
+    while (true)
+    {
+        string word = PickRandomWord(words);
+        string hidden = MakeHidden(word);
+
+        int guessesLeft = 6;
+
+        // Use a set here to store guessed letters so duplicates are automatically prevented,
+        // and checking for existing guesses is simple.
+        set<char> guessed;
+
+        while (guessesLeft > 0 && hidden != word)
+        {
+            PrintState(hidden, guessesLeft, guessed);
+
+            char guess = GetGuess(guessed);
+            guessed.insert(guess);
+
+            bool correct = ApplyGuess(word, hidden, guess);
+
+            if (!correct)
+            {
+                guessesLeft--;
+                cout << "Miss.\n";
+            }
+            else
+            {
+                cout << "Hit.\n";
+            }
+        }
+
         PrintState(hidden, guessesLeft, guessed);
 
-        char guess = GetGuess(guessed);
-        guessed.insert(guess);
+        bool won = (hidden == word);
 
-        bool correct = ApplyGuess(word, hidden, guess);
-
-        if (!correct)
+        if (won)
         {
-            guessesLeft--;
-            cout << "Miss.\n";
+            cout << "\nYou won. The word was: " << word << "\n";
+            currentStreak++;
+
+            if (currentStreak > bestStreak)
+            {
+                bestStreak = currentStreak;
+                SaveBestStreak(STATS_FILE, bestStreak);
+                cout << "New best win streak: " << bestStreak << "\n";
+            }
+
+            // Adds the new word to the in-memory list so we dont have to fully restart to use it. 
+            if (AskYesNo("Add a new word to the word bank? (y/n): "))
+            {
+                while (true)
+                {
+                    cout << "Enter a new word (letters only): ";
+                    string newWord;
+                    getline(cin, newWord);
+
+                    for (char& c : newWord) c = tolower(c);
+
+                    if (!IsValidWord(newWord))
+                    {
+                        cout << "Invalid word. Letters only, no spaces.\n";
+                        continue;
+                    }
+
+                    AppendWordToFile(WORDS_FILE, newWord);
+                    words.push_back(newWord); 
+                    cout << "Word added.\n";
+                    break;
+                }
+            }
         }
         else
         {
-            cout << "Hit.\n";
+            cout << "\nYou lost. The word was: " << word << "\n";
+            currentStreak = 0;
         }
-    }
 
-    PrintState(hidden, guessesLeft, guessed);
-
-    if (hidden == word)
-    {
-        cout << "\nYou won. The word was: " << word << "\n";
-    }
-    else
-    {
-        cout << "\nYou lost. The word was: " << word << "\n";
+        if (!AskYesNo("Play again? (y/n): "))
+        {
+            cout << "Goodbye.\n";
+            break;
+        }
     }
 
     return 0;
 }
-// next
