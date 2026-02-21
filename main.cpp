@@ -9,6 +9,12 @@
 
 using namespace std;
 
+const int MAX_GUESSES = 6; 
+
+// TODO (Part 2): Create class HangmanGame and move these responsibilities into it:
+// - State: word, hidden, guessesLeft, guessed
+// - Methods: Reset(newWord), PrintState(), GetGuess(), ApplyGuess/ProcessGuess(), IsWon(), IsLost()
+
 // Pass strings by const reference to avoid copying and to prevent accidental changes.
 string MakeHidden(const string& word)
 {
@@ -88,7 +94,8 @@ string GetHangmanArt(int wrongGuesses)
 
 void PrintState(const string& hidden, int guessesLeft, const set<char>& guessed)
 {
-    int wrongGuesses = 6 - guessesLeft;
+    // Derive wrong guesses from guessesLeft to avoid tracking two separate counters.
+    int wrongGuesses = MAX_GUESSES - guessesLeft;
 
     cout << "\n" << GetHangmanArt(wrongGuesses);
 
@@ -170,7 +177,7 @@ bool IsValidWord(const string& w)
     return true;
 }
 
-// Loads all words into memort at once during startup. Simpler and fast than dealing with it every round. 
+// Loads all words into memory at once during startup. Simpler and faster than dealing with it every round.
 vector<string> LoadWords(const string& filename)
 {
     vector<string> words;
@@ -187,7 +194,7 @@ vector<string> LoadWords(const string& filename)
     {
         string cleaned = "";
 
-        // Normalize input to keep game logic consistent. 
+        // Normalize input to keep game logic consistent.
         for (char c : line)
         {
             char lc = tolower(c);
@@ -244,7 +251,7 @@ int LoadBestStreak(const string& filename)
     ifstream in(filename);
     if (!in.is_open())
     {
-        return 0; 
+        return 0;
     }
 
     int best = 0;
@@ -279,18 +286,25 @@ int main()
         return 0;
     }
 
-    // Store best streak seperately to maintain file independence and integrity. 
+    // Store best streak separately to maintain file independence and integrity.
     int bestStreak = LoadBestStreak(STATS_FILE);
     int currentStreak = 0;
 
     cout << "Best win streak: " << bestStreak << "\n";
 
+    // TODO (Part 3): Simplify main() after you create HangmanGame.
+    // Goal: main() should only deal with:
+    // - load words + stats
+    // - pick word
+    // - run HangmanGame until win/lose
+    // - update stats + optionally add word
+    // - replay prompt
     while (true)
     {
         string word = PickRandomWord(words);
         string hidden = MakeHidden(word);
 
-        int guessesLeft = 6;
+        int guessesLeft = MAX_GUESSES;
 
         // Use a set here to store guessed letters so duplicates are automatically prevented,
         // and checking for existing guesses is simple.
@@ -332,7 +346,7 @@ int main()
                 cout << "New best win streak: " << bestStreak << "\n";
             }
 
-            // Adds the new word to the in-memory list so we dont have to fully restart to use it. 
+            // Adds the new word to the in-memory list so we dont have to fully restart to use it.
             if (AskYesNo("Add a new word to the word bank? (y/n): "))
             {
                 while (true)
@@ -350,7 +364,7 @@ int main()
                     }
 
                     AppendWordToFile(WORDS_FILE, newWord);
-                    words.push_back(newWord); 
+                    words.push_back(newWord);
                     cout << "Word added.\n";
                     break;
                 }
