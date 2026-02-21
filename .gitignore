@@ -1,0 +1,10 @@
+hangman
+main
+*.out
+*.o
+*.exe
+*.dSYM/
+
+.DS_Store
+
+.vscode/
