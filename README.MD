@@ -30,6 +30,7 @@ I developed a console-based Hangman game in C++ that allows the user to play rep
 
 - Implement a GUI to replace the console interface
 - Add a difficulty setting that would filter word lengths
+- Add the ability to guess the whole word
 
 # AI disclosure
 
