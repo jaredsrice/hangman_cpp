@@ -192,7 +192,7 @@ void AppendWordToFile(const string& filename, const string& word)
         return;
     }
 
-    out << word << "\n";
+    out << "\n" << word;
 }
 
 int LoadBestStreak(const string& filename)
