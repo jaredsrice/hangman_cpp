@@ -12,12 +12,12 @@ I developed a console-based Hangman game in C++ that allows the user to play rep
 
 # Libraries Used
 
-- <iostream> for console input/output
-- <vector> for dynamic word storage
-- <set> for tracking guessed letters without duplicates
-- <fstream> for file reading/writing
-- <cctype> for validating and normalizing characters
-- <cstdlib> with <ctime> for random number generation
+- `<iostream>` for console input/output
+- `<vector>` for dynamic word storage
+- `<set>` for tracking guessed letters without duplicates
+- `<fstream>` for file reading/writing
+- `<cctype>` for validating and normalizing characters
+- `<cstdlib>` with `<ctime>` for random number generation
 
 # Useful Websites
 
