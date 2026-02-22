@@ -37,7 +37,12 @@ int main()
     int bestStreak = LoadBestStreak(STATS_FILE);
     int currentStreak = 0;
 
-    cout << "Best win streak: " << bestStreak << "\n";
+    cout << "\n\n\n";
+    cout << "=====================\n";
+    cout << "      HANGMAN\n";
+    cout << "=====================\n";
+    cout << "Max guesses: 6\n";
+    cout << "Best win streak: " << bestStreak << "\n\n";
 
     HangmanGame game;
 
