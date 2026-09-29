@@ -1,6 +1,6 @@
-# Overview
+# Hangman
 
-I developed a console-based Hangman game in C++ that allows the user to play repeated rounds against a randomly selected word from a file. The program is written using OOP fundamentals, along with structured game logic, input validation, the ability to read/write to a file, and a persistent streak tracker. Words are loaded from the text file at startup, and the user has the ability to add a new word to the wordback if desired. The current winstreak is tracked between sessions. 
+I built a C++ Hangman game that picks words from a file and lets you play multiple rounds. You can add words, and the game saves your win streak between sessions. It was a chance for me to practice classes, file handling, and input validation.
 
 [Software Demo Video](https://youtu.be/pc6F-Op0jPE)
 
@@ -34,4 +34,4 @@ I developed a console-based Hangman game in C++ that allows the user to play rep
 
 # AI disclosure
 
-- I used ChatGPT as a learning and reference tool throughout this project to help think through design approaches,clarify C++ syntax, and review pseudocode ideas. I primarily used AI to strengthen my understanding of the language and standard library features, while ensuring all final code reflects my own understanding. 
+- I used ChatGPT as a learning and reference tool throughout this project to help think through design approaches, clarify C++ syntax, and review pseudocode ideas. I primarily used AI to strengthen my understanding of the language and standard library features, while ensuring all final code reflects my own understanding.
